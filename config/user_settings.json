@@ -1,6 +1,5 @@
 {
-    "eldenRingInstallLocation": "",
-    "modEngine3InstallLocation": "",
-    "isDebugMode": true,
+    "defaultProfile": "",
+    "isDebugMode": false,
     "debugString": "This Config is in Debug Mode"
 }

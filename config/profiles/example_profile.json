@@ -1,0 +1,8 @@
+{
+    "profileName": "Example Profile",
+    "profileDescription": "This profile is only to be used as an example. Please create your own profile if you wish to use Elden Manager",
+    "profileImage": "",
+    "profileMods": [
+        "testMod", "Convergence"
+    ] 
+}

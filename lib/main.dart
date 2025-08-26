@@ -1,8 +1,12 @@
+// ignore_for_file: avoid_print
+
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:elden_manager/launcher.dart';
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
+import 'package:version/version.dart';
 
 import 'json_config.dart';
 
@@ -27,16 +31,7 @@ class EldenModManager extends StatelessWidget {
 }
 
 class ProfilesPage extends StatefulWidget {
-  ProfilesPage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  const ProfilesPage({super.key, required this.title});
 
   final String title;
 
@@ -45,31 +40,106 @@ class ProfilesPage extends StatefulWidget {
 }
 
 class _ProfilesPageState extends State<ProfilesPage> {
-  int _counter = 0;
+  bool isME3Installed = false;
+  String me3Version = "";
 
-  void _incrementCounter() {
+  bool havePerformedUpdateCheck = false;
+  bool me3HasUpdate = false;
+  String newME3Version = "";
+  Uri updateURL = Uri.parse("");
+
+  @override
+  void initState() {
+    super.initState();
+    print("Initializing");
+    getModEngine3Install();
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      isME3Installed = false;
+    });
+
+    http
+        .get(
+          Uri.https("api.github.com", "repos/garyttierney/me3/releases/latest"),
+        )
+        .then((response) {
+          print("recieved data from server...");
+          print("Status code ${response.statusCode}");
+          if (response.statusCode == 200) {
+            print("data was valid");
+            var content = jsonDecode(response.body);
+            Version newVersion = Version.parse(
+              content["name"].toString().replaceFirst("v", ""),
+            );
+            Version currentVersion = Version.parse(me3Version);
+            // Version currentVersion = Version.parse("0.0.1");
+
+            if (newVersion > currentVersion) {
+              print("New Version Available!");
+              print("New Version: $newVersion");
+              print("Update URL: ${content["html_url"]}");
+              setState(() {
+                me3HasUpdate = true;
+                newME3Version = newVersion.toString();
+                updateURL = Uri.parse(content["html_url"]);
+                havePerformedUpdateCheck = true;
+              });
+            } else {
+              print("No updates available");
+              newME3Version = newVersion.toString();
+            }
+          } else {
+            setState(() {
+              havePerformedUpdateCheck = true;
+              newME3Version = "Unable to acquire new version";
+            });
+            print("Invalid response from GitHub: ${response.statusCode}");
+          }
+        });
+  }
+
+  void getModEngine3Install() {
+    print("Checking if ME3 is installed");
+    Process.run('me3', ['-V']).then((value) {
+      if (value.stdout.toString().contains("me3")) {
+        print("ME3 is installed!");
+        List<String> output = value.stdout.toString().split(" ");
+
+        setState(() {
+          isME3Installed = true;
+          me3Version = output.last.trim();
+        });
+      } else {
+        print("ME3 is not installed!");
+        setState(() {
+          isME3Installed = false;
+          me3Version = "";
+        });
+      }
+    });
+  }
+
+  void readConfig() async {
+    File("config/user_settings.json").readAsString().then((String contents) {
+      final configData = JsonConfig.fromJson(contents);
+      if (configData.isDebugMode) print(configData.debugString);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    File("config/user_settings.json").readAsString().then((String contents) {
-      final configData = JsonConfig.fromJson(contents);
-      if (configData.isDebugMode) print(configData.debugString);
-    });
+    TextStyle mediumWhiteText = TextStyle(
+      color: Theme.of(context).colorScheme.onPrimary,
+      fontSize: 15,
+    );
 
+    readConfig();
+    // getModEngine3Install();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: Text("Elden Manager"),
+        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.play_arrow))],
       ),
       drawer: Drawer(
         child: ListView(
@@ -91,14 +161,51 @@ class _ProfilesPageState extends State<ProfilesPage> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              "Mods:",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24.0),
             ),
           ],
+        ),
+      ),
+      bottomNavigationBar: BottomAppBar(
+        elevation: 1.0,
+        color: Theme.of(context).colorScheme.primary,
+        child: IconTheme(
+          data: IconThemeData(color: Theme.of(context).colorScheme.onPrimary),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: <Widget>[
+              if (!isME3Installed)
+                Launcher(
+                  url: Uri.parse(
+                    "https://github.com/garyttierney/me3/releases/latest",
+                  ),
+                  label:
+                      "Click here to download ME3. Click refresh after install.",
+                ),
+              if (!isME3Installed)
+                IconButton(
+                  onPressed: getModEngine3Install,
+                  icon: Icon(Icons.refresh),
+                ),
+              if (isME3Installed)
+                Text(
+                  "Mod Engine 3 Version $me3Version",
+                  style: mediumWhiteText,
+                ),
+              if (isME3Installed)
+                Text("Latest Version: $newME3Version", style: mediumWhiteText),
+              if (me3HasUpdate)
+                Launcher(
+                  url: updateURL,
+                  label:
+                      "ME3 Update Available ($me3Version > $newME3Version). Click to update.",
+                ),
+            ],
+          ),
         ),
       ),
     );

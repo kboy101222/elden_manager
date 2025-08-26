@@ -1,0 +1,7 @@
+{
+    "testMod": {
+        "name": "Test Mod",
+        "description": "This is purely for testing the mods",
+        "file": "testMod.zip"
+    }
+}
