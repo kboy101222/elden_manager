@@ -28,7 +28,6 @@ class Launcher extends StatelessWidget {
   }
 
   Future<void> _launchUrl() async {
-    print("launching URL $url");
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       throw Exception("Could not launch $url");
     }

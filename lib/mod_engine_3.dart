@@ -12,27 +12,23 @@ import 'package:version/version.dart';
 class ModEngine3 {
   bool? _isInstalled;
   bool? _hasUpdate;
-  Map<String, String?> _versionData = {
+  final Map<String, String?> _versionData = {
     "currentVersion": null,
     "latestVersion": null,
     "updateUrl": null,
   };
 
   Future<bool> get isInstalled async {
-    print("Checking if ME3 is installed");
     // if (_isInstalled != null) {
     //   print("Already checked, returning _isInstalled");
     //   return _isInstalled!;
     // }
     await Process.run('me3', ['-V']).then((value) {
       List processedLines = value.stdout.toString().trim().split(" ");
-      print("[isInstalled] 'me3 -V' output: $processedLines");
       if (processedLines.length == 2) {
-        print("ME3 is Installed!");
         _isInstalled = true;
         // return _isInstalled;
       } else {
-        print("ME3 Not Installed!");
         _isInstalled = false;
         // return _isInstalled;
       }
@@ -42,18 +38,14 @@ class ModEngine3 {
   }
 
   Future<String> get currentVersion async {
-    print("Obtaininig Current Version");
     if (_versionData["currentVersion"] != null) {
-      print("Already set to ${_versionData["currentVersion"]}");
       return _versionData["currentVersion"]!;
     }
 
     if (await isInstalled) {
       await Process.run('me3', ['-V']).then((value) async {
         List processedLines = value.stdout.toString().trim().split(" ");
-        print("[currentVersion] processedLines: $processedLines");
         String vNumber = processedLines[1].toString();
-        print("Obtained version number $vNumber");
         _versionData["currentVersion"] = vNumber;
         return _versionData["currentVersion"];
       });
@@ -83,16 +75,12 @@ class ModEngine3 {
     await fetchVersionInfo().then((value) async {
       String cVersion = await currentVersion;
       String lVersion = await latestVersion;
-      print("currentVersion: $cVersion");
-      print("latestVersion: $lVersion");
       try {
         _hasUpdate =
             (Version.parse(lVersion.toString()) >
             Version.parse(cVersion.toString()));
-        print("ME3 has update: $_hasUpdate");
         return _hasUpdate;
       } on FormatException {
-        print("Error obtaining current version!");
         return false;
       }
     });
@@ -106,8 +94,6 @@ class ModEngine3 {
       if (_versionData[key] == null) foundNull = true;
     }
     if (!foundNull) {
-      print("_versionData already set, returning");
-      print("$_versionData");
       return _versionData;
     }
 
@@ -168,7 +154,6 @@ class UpdateBar extends StatelessWidget {
     ModEngine3 modEngine,
   ) async {
     bool isInstalled = await modEngine.isInstalled;
-    print("isInstalled: $isInstalled");
     bool hasUpdate = await modEngine.hasUpdate;
     String currentVersion = await modEngine.currentVersion;
     String latestVersion = await modEngine.latestVersion;
@@ -187,11 +172,11 @@ class UpdateBar extends StatelessWidget {
       return UpdateBar(
         children: [
           Text(
-            "Current ME3 Version: ${currentVersion}",
+            "Current ME3 Version: $currentVersion",
             style: CustomStyle.mediumWhiteText,
           ),
           Text(
-            "Latest ME3 Version: ${latestVersion}",
+            "Latest ME3 Version: $latestVersion",
             style: CustomStyle.mediumWhiteText,
           ),
           Launcher(
@@ -204,11 +189,11 @@ class UpdateBar extends StatelessWidget {
       return UpdateBar(
         children: [
           Text(
-            "Current ME3 Version: ${currentVersion}",
+            "Current ME3 Version: $currentVersion",
             style: CustomStyle.mediumWhiteText,
           ),
           Text(
-            "Latest ME3 Version: ${latestVersion}",
+            "Latest ME3 Version: $latestVersion",
             style: CustomStyle.mediumWhiteText,
           ),
           Icon(Icons.check_circle),
