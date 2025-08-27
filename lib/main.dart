@@ -59,11 +59,7 @@ class _ProfilesPageState extends State<ProfilesPage> {
     futureUpdateBar = createUpdateBar(modEngine);
     // profileList = getProfiles("config/profiles");
     // profilePreviews = buildFromProfileList("config/profiles", notifier);
-    profilePreviews = createProfilePreviewList(
-      "config/profiles",
-      notifier,
-      scaffoldKey,
-    );
+    profilePreviews = createProfilePreviewList("config/profiles", notifier);
   }
 
   @override
@@ -85,7 +81,6 @@ class _ProfilesPageState extends State<ProfilesPage> {
               return snapshot.data!;
             } else if (snapshot.hasError) {
               return ProfilePreviewList(
-                scaffoldKey: scaffoldKey,
                 children: [
                   ProfilePreview(
                     name: "ERROR",
@@ -114,13 +109,22 @@ class _ProfilesPageState extends State<ProfilesPage> {
                 ListenableBuilder(
                   listenable: notifier,
                   builder: (context, Widget? child) {
-                    return Text(
-                      "Current Profile: ${notifier.currentProfile ?? "None"}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16.0,
-                      ),
-                    );
+                    if (notifier.currentProfile != null) {
+                      return Text(
+                        "Current Profile: ${notifier.currentProfile}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16.0,
+                        ),
+                      );
+                    } else {
+                      return TextButton(
+                        onPressed: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                        child: Text("Click to select a profile"),
+                      );
+                    }
                   },
                 ),
               ],

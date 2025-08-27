@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:elden_manager/profile/profile.dart';
@@ -13,7 +12,6 @@ class ProfilePreview extends StatefulWidget {
     required this.profile,
     this.image = "config/images/elden_ring_icon.png",
     this.notifier,
-    this.scaffoldKey,
   });
 
   final String name;
@@ -21,7 +19,6 @@ class ProfilePreview extends StatefulWidget {
   final String image;
   final Profile profile;
   final ModManagerModel? notifier;
-  final GlobalKey<ScaffoldState>? scaffoldKey;
 
   @override
   State<ProfilePreview> createState() => _ProfilePreviewState();
@@ -43,9 +40,10 @@ class _ProfilePreviewState extends State<ProfilePreview> {
       subtitle: descriptionElement,
       trailing: IconButton(
         onPressed: () {
-          if (widget.notifier != null && widget.scaffoldKey != null) {
+          if (widget.notifier != null) {
             widget.notifier?.setCurrentProfile(widget.profile);
             // widget.scaffoldKey?.currentState!.closeDrawer();
+            Navigator.pop(context);
           }
         },
         icon: Icon(Icons.play_arrow_outlined),
@@ -56,23 +54,15 @@ class _ProfilePreviewState extends State<ProfilePreview> {
 }
 
 class ProfilePreviewList extends StatefulWidget {
-  const ProfilePreviewList({
-    super.key,
-    required this.children,
-    this.notifier,
-    required this.scaffoldKey,
-  });
+  const ProfilePreviewList({super.key, required this.children, this.notifier});
 
   final List<ProfilePreview> children;
   final ModManagerModel? notifier;
-  final GlobalKey<ScaffoldState> scaffoldKey;
 
   static Future<ProfilePreviewList> fromProfileList(
     ProfileList profileList,
     ModManagerModel? notifier,
-    GlobalKey<ScaffoldState> scaffoldKey,
   ) async {
-    print("scaffoldKey on fromProfileList: $scaffoldKey");
     List<ProfilePreview> elementList = [];
 
     for (Profile profile in profileList.profiles) {
@@ -83,12 +73,11 @@ class ProfilePreviewList extends StatefulWidget {
           image: profile.image,
           notifier: notifier,
           profile: profile,
-          scaffoldKey: scaffoldKey,
         ),
       );
     }
 
-    return ProfilePreviewList(scaffoldKey: scaffoldKey, children: elementList);
+    return ProfilePreviewList(children: elementList);
   }
 
   @override
@@ -119,13 +108,7 @@ class _ProfilePreviewListState extends State<ProfilePreviewList> {
 Future<ProfilePreviewList> createProfilePreviewList(
   String profilesFolder,
   ModManagerModel notifier,
-  GlobalKey<ScaffoldState> scaffoldKey,
 ) async {
   ProfileList profileList = getProfiles(profilesFolder);
-  print(profileList);
-  return await ProfilePreviewList.fromProfileList(
-    profileList,
-    notifier,
-    scaffoldKey,
-  );
+  return await ProfilePreviewList.fromProfileList(profileList, notifier);
 }

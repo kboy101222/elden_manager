@@ -14,3 +14,5 @@ class JsonConfig {
     );
   }
 }
+
+class UserConfig {}
