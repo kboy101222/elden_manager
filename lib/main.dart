@@ -1,5 +1,4 @@
-// ignore_for_file: avoid_print
-
+import 'package:elden_manager/mod.dart';
 import 'package:elden_manager/mod_engine_3.dart';
 import 'package:elden_manager/profile/profile.dart';
 import 'package:elden_manager/profile/profile_preview.dart';
@@ -54,12 +53,15 @@ class _ProfilesPageState extends State<ProfilesPage> {
   @override
   void initState() {
     super.initState();
-    print("Initializing");
     ModEngine3 modEngine = ModEngine3();
     futureUpdateBar = createUpdateBar(modEngine);
-    // profileList = getProfiles("config/profiles");
-    // profilePreviews = buildFromProfileList("config/profiles", notifier);
-    profilePreviews = createProfilePreviewList("config/profiles", notifier);
+    profilePreviews = createProfilePreviewList("data/profiles", notifier);
+
+    ProfileList profileList = notifier.profileList;
+    String defaultProfile = notifier.getSetting("defaultProfile") ?? "";
+    if (defaultProfile != "") {
+      notifier.setCurrentProfile(profileList[defaultProfile]);
+    }
   }
 
   @override
@@ -69,7 +71,18 @@ class _ProfilesPageState extends State<ProfilesPage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: Text("Elden Manager"),
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.play_arrow))],
+        actions: [
+          IconButton(
+            onPressed: null,
+            icon: Icon(Icons.file_open_outlined),
+            tooltip: "Import Profile",
+          ),
+          IconButton(
+            onPressed: null,
+            icon: Icon(Icons.play_arrow),
+            tooltip: "Launch Elden Ring",
+          ),
+        ],
       ),
       drawer: Drawer(
         key: scaffoldKey,
@@ -85,11 +98,7 @@ class _ProfilesPageState extends State<ProfilesPage> {
                   ProfilePreview(
                     name: "ERROR",
                     description: "There was an error retrieving profiles!",
-                    profile: Profile(
-                      name: "Error",
-                      fileName: "Error",
-                      modList: [],
-                    ),
+                    profile: Profile(name: "Error", fileName: "Error"),
                   ),
                 ],
               );
@@ -111,18 +120,27 @@ class _ProfilesPageState extends State<ProfilesPage> {
                   builder: (context, Widget? child) {
                     if (notifier.currentProfile != null) {
                       return Text(
-                        "Current Profile: ${notifier.currentProfile}",
+                        "Current Profile: ${notifier.currentProfile!.name}",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16.0,
                         ),
                       );
                     } else {
-                      return TextButton(
+                      return TextButton.icon(
                         onPressed: () {
                           Scaffold.of(context).openDrawer();
                         },
-                        child: Text("Click to select a profile"),
+                        label: Text("Click to select a profile"),
+                        icon: Icon(Icons.arrow_circle_up),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onSecondary,
+                        ),
                       );
                     }
                   },
@@ -134,11 +152,33 @@ class _ProfilesPageState extends State<ProfilesPage> {
               children: [
                 Text(
                   "Mods:",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24.0),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
                 ),
               ],
             ),
-            Row(children: [Text("Mod list will go here")]),
+            Row(
+              children: [
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: notifier,
+                    builder: (context, Widget? child) {
+                      if (notifier.currentProfile != null) {
+                        if (notifier.currentModList != null) {
+                          return ModTileList(
+                            modList: notifier.currentModList!,
+                            notifier: notifier,
+                          );
+                        }
+                        return Text(
+                          "The selected profile doesn't seem to have any mods! Start adding some with the buttons above.",
+                        );
+                      }
+                      return Text("Please select a profile to view mods");
+                    },
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

@@ -1,18 +1,31 @@
 import "dart:convert";
+import "dart:io";
 
-class JsonConfig {
-  JsonConfig({this.isDebugMode = false, this.debugString = ""});
+class UserConfig {
+  UserConfig(this.settings);
 
-  final bool isDebugMode;
-  final String debugString;
+  Map<String, dynamic> settings;
 
-  factory JsonConfig.fromJson(String jsonString) {
-    final Map<String, dynamic> data = json.decode(jsonString);
-    return JsonConfig(
-      isDebugMode: data["isDebugMode"],
-      debugString: data["debugString"],
-    );
+  factory UserConfig.loadFromFile(String settingsFile) {
+    var userSettingsFile = File(settingsFile);
+    if (userSettingsFile.existsSync()) {
+      String settingsFileString = userSettingsFile.readAsStringSync();
+      Map<String, dynamic> settingsFileMap = jsonDecode(settingsFileString);
+      return UserConfig(settingsFileMap);
+    }
+
+    throw Exception("Settings file '${userSettingsFile.path}' does not exist");
+  }
+
+  operator [](Object setting) {
+    if (setting is String) {
+      if (settings.keys.contains(setting)) {
+        return settings[setting];
+      } else {
+        return {};
+      }
+    } else {
+      throw Exception("Invalid object - ${setting.runtimeType.toString()}");
+    }
   }
 }
-
-class UserConfig {}

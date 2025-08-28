@@ -1,25 +1,28 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:elden_manager/mod.dart';
+
 class Profile {
   Profile({
     required this.name,
     this.description = "",
-    this.image = "config/images/elden_ring_icon.png",
+    this.image = "data/images/elden_ring_icon.png",
     required this.fileName,
-    required this.modList,
+    this.modList,
   });
 
   String name;
   String description;
   String image;
   String fileName;
-  List<String> modList;
+  ModList? modList;
 
   factory Profile.fromJson(
     Map<String, dynamic> profileInfo, {
     String folderName = "",
     String? imageFile,
+    // List<Map>? modList,
   }) {
     for (String key in ["name", "modList"]) {
       if (!profileInfo.keys.contains(key)) {
@@ -29,26 +32,50 @@ class Profile {
     String description = profileInfo.keys.contains("description")
         ? profileInfo["description"]
         : "";
-    List<String> modList = [];
-    for (var item in profileInfo["modList"]) {
-      modList.add(item.toString());
+
+    ModList mods = ModList();
+    // List<Map> profileMods = jsonDecode(profileInfo["modList"]["modList"]);
+    for (var mod in profileInfo["modList"]) {
+      mods.add(
+        Mod(
+          name: mod["name"],
+          description: mod["description"],
+          isEnabled: mod["isEnabled"] ?? true,
+        ),
+      );
     }
+
     if (imageFile != null) {
       return Profile(
         name: profileInfo["name"],
         fileName: folderName,
-        modList: modList,
         description: description,
         image: imageFile,
+        modList: mods,
       );
     } else {
       return Profile(
         name: profileInfo["name"],
         fileName: folderName,
-        modList: modList,
+        modList: mods,
         description: description,
       );
     }
+  }
+
+  Map<String, dynamic> toJson() {
+    Map<String, dynamic> profileMap = {
+      "name": name,
+      "description": description,
+      "image": image,
+      "modList": modList != null ? modList!.toJson() : [],
+    };
+    return profileMap;
+  }
+
+  void saveProfile() {
+    File profileFile = File("${fileName}/profile.json");
+    profileFile.writeAsStringSync(jsonEncode(toJson()));
   }
 
   @override
@@ -91,6 +118,15 @@ class ProfileList {
     return _profileNames;
   }
 
+  Profile getProfileByName(String name) {
+    for (Profile profile in profiles) {
+      if (profile.name == name) {
+        return profile;
+      }
+    }
+    throw Exception("No profile found with name '$name'");
+  }
+
   void add(Profile profile) {
     list.add(profile);
   }
@@ -99,9 +135,17 @@ class ProfileList {
     return list.remove(profile);
   }
 
-  operator [](Profile profile) {
-    if (profiles.contains(profile)) {
-      return profile;
+  operator [](Object profile) {
+    if (profile is Profile) {
+      if (profiles.contains(profile)) {
+        return profile;
+      }
+    } else if (profile is String) {
+      try {
+        return getProfileByName(profile);
+      } on Exception {
+        return null;
+      }
     }
     throw Exception("The supplied profile does not exist");
   }

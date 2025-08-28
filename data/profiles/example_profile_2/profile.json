@@ -1,0 +1,9 @@
+{
+    "name": "Example Profile 2",
+    "description": "This one's also for testing",
+    "image": "",
+    "modList": [
+        {"name": "Elden Ring Remastered", "description": "A massive overhaul mod for Elden Ring", "isEnabled":true},
+        {"name": "Super Duper Map", "description": "Makes the map better (not really)", "isEnabled": false}
+    ] 
+}

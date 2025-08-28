@@ -10,7 +10,7 @@ class ProfilePreview extends StatefulWidget {
     required this.name,
     required this.description,
     required this.profile,
-    this.image = "config/images/elden_ring_icon.png",
+    this.image = "data/images/elden_ring_icon.png",
     this.notifier,
   });
 
@@ -94,9 +94,45 @@ class _ProfilePreviewListState extends State<ProfilePreviewList> {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.secondary,
           ),
-          child: Text(
-            "Profiles",
-            style: TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+          // child: Text(
+          //   "Profiles",
+          //   style: TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+          // ),
+          child: Column(
+            children: [
+              Text(
+                "Profiles",
+                style: Theme.of(context).textTheme.headlineSmall?.merge(
+                  TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+                ),
+              ),
+              Spacer(),
+              IconTheme(
+                data: IconThemeData(
+                  color: Theme.of(context).colorScheme.onSecondary,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: Icon(Icons.add),
+                      tooltip: "Create New Profile",
+                    ),
+                    IconButton(
+                      onPressed: null,
+                      icon: Icon(Icons.file_download_outlined),
+                      tooltip: "Import Elden Manager Profile (WIP)",
+                    ),
+                    IconButton(
+                      onPressed: null,
+                      icon: Icon(Icons.file_copy_outlined),
+                      tooltip: "Import ME3 Profile (WIP)",
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
         for (ProfilePreview item in widget.children) item,
